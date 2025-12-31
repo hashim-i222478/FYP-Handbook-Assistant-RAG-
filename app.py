@@ -11,6 +11,11 @@ import os
 ########################################
 # CONFIG
 ########################################
+from dotenv import load_dotenv
+
+# Load environment variables from .env file if present
+load_dotenv()
+
 INDEX_DIR = "handbook_index"
 FAISS_INDEX_PATH = f"{INDEX_DIR}\\faiss.index"
 CHUNKS_JSONL_PATH = f"{INDEX_DIR}\\chunks.jsonl"
@@ -22,7 +27,7 @@ SIM_THRESHOLD = 0.25  # assignment requirement
 
 # Gemini API Configuration
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "YOUR_API_KEY_HERE")
-genai.configure(api_key="AIzaSyA8cN50FzhTVbIzzoB-ASF-QekR_V_gl9A")
+genai.configure(api_key=GEMINI_API_KEY)
 
 ########################################
 # LOAD INDEX, MODEL & CHUNKS

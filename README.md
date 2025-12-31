@@ -40,7 +40,7 @@ It uses **Streamlit** for the user interface, **FAISS** for efficient similarity
 2.  **Install Dependencies**:
     You can install the required packages using pip.
     ```bash
-    pip install streamlit faiss-cpu sentence-transformers google-generativeai pdfplumber nltk numpy tqdm
+    pip install streamlit faiss-cpu sentence-transformers google-generativeai pdfplumber nltk numpy tqdm python-dotenv
     ```
 
 ## ⚙️ Usage
@@ -78,7 +78,10 @@ streamlit run app.py
 
 You can adjust key parameters directly in `app.py`:
 
-*   **`GEMINI_API_KEY`**: Ensure this is set correctly. By default, it looks for an environment variable or uses a hardcoded placeholder.
+*   **`GEMINI_API_KEY`**: **CRITICAL**: You must set this environment variable. 
+    *   Create a `.env` file in the project root (do not commit this file).
+    *   Add `GEMINI_API_KEY=your_actual_api_key_here`.
+    *   The app will read this automatically if you use `python-dotenv` or set it in your system environment.
 *   **`TOP_K`** (Default: 7): Number of chunks to initially retrieve from FAISS.
 *   **`FINAL_K`** (Default: 5): Number of chunks to keep after MMR reranking.
 *   **`SIM_THRESHOLD`** (Default: 0.25): Minimum similarity score required to consider a chunk relevant.
