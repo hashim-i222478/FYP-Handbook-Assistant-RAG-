@@ -1,0 +1,235 @@
+================================================================================
+PROMPT LOG: FYP Handbook Assistant RAG System
+================================================================================
+
+================================================================================
+1. SYSTEM PROMPT TEMPLATE
+================================================================================
+
+You are a handbook assistant. Answer ONLY from the context.
+Cite page numbers like "(p. X)". If unsure, say you don't know.
+
+Question: {user_question}
+
+Context:
+{top_chunks_text}
+
+
+================================================================================
+2. CONTEXT FORMAT
+================================================================================
+
+Each retrieved chunk is formatted as:
+
+[Chunk from p.{page_number}]
+{chunk_text}
+
+
+Multiple chunks are separated by double newlines.
+
+================================================================================
+3. EXAMPLE INFERENCE PROMPT (Sample Query)
+================================================================================
+
+Question: "What are the FYP evaluation criteria?"
+
+Full Prompt Sent to LLM:
+---
+You are a handbook assistant. Answer ONLY from the context.
+Cite page numbers like "(p. X)". If unsure, say you don't know.
+
+Question: What are the FYP evaluation criteria?
+
+Context:
+[Chunk from p.52]
+Evaluation:
+(A= Excellent, B=Good, C=Satisfactory, D=Not Satisfactory,
+F=Not Accepted*)
+(Dev = Development FYP, R&D = R&D-based FYP)
+* Justify in case of ticking "Not Accepted". Any other
+comments/suggestions!
+
+[Chunk from p.50]
+Evaluation: (please tick one)
+* Modifications (Minor/Major) Recommended (if any)
+* Reason for Rejection (mandatory, if any FYP is rejected)
+
+[Chunk from p.53]
+National University
+of Computer & Emerging Sciences, [Campus]
+Title of FYP:
+Group Members:
+About Evaluator:
+Evaluation:
+(A= Excellent, B=Good, C=Satisfactory, D=Not Satisfactory,
+F=Not Accepted*)
+(Dev = Development FYP, R&D = R&D-based FYP)
+
+[Chunk from p.48]
+Group Members:
+External Supervisor (if any):
+Name
+Organization
+Name of Faculty Supervisor
+Supervisor's Signature Dated
+
+[Chunk from p.56]
+Evaluation:
+(A= Excellent, B=Good, C=Satisfactory, D=Not Satisfactory,
+F=Not Accepted*)
+(Dev = Development FYP, R&D = R&D-based FYP)
+---
+
+================================================================================
+4. EXAMPLE INFERENCE PROMPT 2
+================================================================================
+
+Question: "What is the page format for FYP report?"
+
+Full Prompt Sent to LLM:
+---
+You are a handbook assistant. Answer ONLY from the context.
+Cite page numbers like "(p. X)". If unsure, say you don't know.
+
+Question: What is the page format for FYP report?
+
+Context:
+[Chunk from p.42]
+Arredondo, Lani (1999) Business Presentations, McGraw-Hill.
+Schill, Jann (1996) On Purpose, Heinemann, Australia.
+Tench, Paul (1981) Pronunciation Skills, Macmillan.
+Note: Use underlining (italics) for titles of books, periodicals
+newspapers, works of art, ships, etc. Articles or chapters in
+books, periodicals, or journals shall come in double quotes.
+Paper
+Standard A4 size
+Width: 8.27"
+Height: 11.69"
+Weight: 90 Grams
+Fonts, Type Styles
+Font Size = 11 (Normal Text)
+Font = Times New Roman
+Title= 26 bold (Times New Roman)
+Sub-title=20 bold (Times New Roman)
+Heading 1 (Font Size) = 16 (Bold)
+Font = Arial
+Heading 2 (Font Size) = 14 (Bold)
+Font = Arial
+Heading 3 (Font Size) = 13 (Bold, Italics)
+Font = Arial
+Margins
+Top = 1.5"
+Bottom = 1.0"
+Left = 2.0"
+Right = 1.0"
+Spacing
+Line Spacing = 1.5
+Paragraph Spacing = 6 pts
+
+[Chunk from p.43]
+Indentation
+Indent all quotations comprising 4 or more lines by 5 spaces from
+left.
+Page Numbers
+Except for the title page, number all pages which come before the
+first page of the body chapters consecutively with lower case
+roman numerals (i, ii, iii, iv,…).
+The first page with Arabic numeral (1, 2, 3, and so on) starts from
+the page of the introduction but it is mentioned from page 2
+onwards.
+Mention page numbers on the top right of the page. The first page
+of each section or chapter will not carry the page number;
+however, the page number will be counted for the proceeding
+page.
+Headers
+The header will comprise the title of the Project report. On every
+odd page will appear the title of the report while on the even
+pages the title of the chapter or section will be mentioned. The
+first page of every section or chapter shall not carry the header.
+---
+
+================================================================================
+5. PROMPT CONSTRAINTS AND RULES
+================================================================================
+
+1. Grounding Rule:
+   - LLM must answer ONLY from the provided context chunks
+   - No external knowledge or hallucination allowed
+   - Context is limited to top-5 retrieved chunks after MMR reranking
+
+2. Citation Rule:
+   - Must cite page numbers in format "(p. X)" or "(p. X, Y, Z)"
+   - Citations must correspond to chunks in the context
+
+3. Uncertainty Handling:
+   - If answer is not in context: "I don't know"
+   - If question is ambiguous: Ask for clarification while staying in scope
+
+4. Scope Limitation:
+   - Only answer questions about FYP Handbook content
+   - Reject queries outside handbook scope
+
+================================================================================
+6. ERROR/EDGE CASE PROMPTS
+================================================================================
+
+Below Similarity Threshold (< 0.25):
+Response: "I don't have that in the handbook."
+
+Empty/Invalid Query:
+Response: "Please enter a question."
+
+API Error:
+Response: "Unable to generate answer. Please check your API key and internet connection."
+
+================================================================================
+7. RETRIEVAL CONFIGURATION
+================================================================================
+
+Embedding Model: sentence-transformers/all-MiniLM-L6-v2
+Vector Store: FAISS IndexFlatIP (cosine similarity)
+Initial Retrieval: TOP_K = 7 candidates
+Reranking: MMR with lambda = 0.5
+Final Chunks: FINAL_K = 5
+Similarity Threshold: 0.25
+Normalization: L2 normalized embeddings
+
+================================================================================
+8. GENERATION CONFIGURATION
+================================================================================
+
+LLM Model: Google Gemini (models/gemini-2.5-flash)
+Temperature: Default (not explicitly set)
+Max Tokens: Default (not explicitly set)
+API: google.generativeai library
+Mode: Free tier
+
+================================================================================
+9. COMPLETE PIPELINE FLOW
+================================================================================
+
+1. User enters question in Streamlit UI
+2. Query validation (non-empty check)
+3. Query embedding using all-MiniLM-L6-v2
+4. FAISS search for top-7 similar chunks
+5. Similarity threshold check (>= 0.25)
+6. MMR reranking to get diverse top-5 chunks
+7. Format context with page references
+8. Construct prompt using template above
+9. Send to Gemini API
+10. Display answer with collapsible source chunks
+
+================================================================================
+10. PROMPT DESIGN RATIONALE
+================================================================================
+
+- Simple and clear instructions for the LLM
+- Explicit grounding constraint ("ONLY from the context")
+- Citation format specified to ensure traceability
+- Uncertainty handling built into instruction
+- Minimal prompt to reduce token usage
+- Context-first approach (context comes after question for emphasis)
+
+================================================================================
+END OF PROMPT LOG
+================================================================================
